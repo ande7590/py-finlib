@@ -5,9 +5,6 @@ class LoanBalance(NamedTuple):
     current_balance: float
     last_payment: float
 
-PMT_TYPE = Union[float, list]
-AMORT_TYPE = Generator[LoanBalance, None, None]
-
 class LoanAmortization(object):    
     """Computes the balance and repayment schedule of loans and similar debts."""
 
@@ -20,26 +17,27 @@ class LoanAmortization(object):
         self.__mutable = False
 
     def __setattr__(self, name, value):
-        if not hasattr(self, '__mutable') or self.__mutable:
+        if not hasattr(self, '_LoanAmortization__mutable') or self.__mutable:
             super.__setattr__(self, name, value)
         else:
             raise AttributeError("LoanAmortization is immutable, cannot set %s" % (name))            
 
-    def amortization(self) -> AMORT_TYPE:
+    def amortization(self) -> Generator[LoanBalance, None, None]:
         """Performs a projection using the payment implied by the parameters 
         in the constructor, which results in zero ending balance (loan fully repaid)"""
         return self.amortization_from_pmts(self.level_pmt)
 
-    def amortization_from_pmts(self, pmts: PMT_TYPE) -> AMORT_TYPE:
+    def amortization_from_pmts(self, pmts: Union[float, list]) \
+            -> Generator[LoanBalance, None, None]:
         """Performs a projection using a schedule of arbitrary payments."""        
         return self.amortization_from_balance(self.loan_amt, 0, pmts)
                 
-    def amortization_from_balance(self, current_balance: float, current_period: int=0, pmts: PMT_TYPE=None) -> AMORT_TYPE:
-        """Performs a projection starting from the supplied balance.  The payment
-        is assumed to be the level amount implied by the constructor."""        
+    def amortization_from_balance(self, current_balance: float, 
+        current_period: int=0, pmts: Union[float, list]=None) \
+            -> Generator[LoanBalance, None, None]:
+        """Performs a projection starting from the supplied balance and utilizing the pmts"""        
         
         remaining_loan_periods = self.term - current_period
-        
         if pmts is not list:
             pmts = [pmts if pmts is float else self.level_pmt] * remaining_loan_periods
 
@@ -53,8 +51,12 @@ class LoanAmortization(object):
 
     @property
     def level_pmt(self):
+        """Computes the level payment implied by the parameters passed to the constructor"""
         disc_factor = pow(1 + self.interest, -1 * self.term)
-        annuity_factor = (1 - disc_factor) / self.interest
-        if self.first_pmt_now == True:
-            annuity_factor /= (1 + self.interest)
+        if self.interest == 0:
+            annuity_factor = self.term
+        else:
+            annuity_factor = (1 - disc_factor) / self.interest
+            if self.first_pmt_now == True:
+                annuity_factor *= (1 + self.interest)
         return self.loan_amt / annuity_factor
