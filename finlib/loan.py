@@ -45,9 +45,10 @@ class LoanAmortization(object):
             current_payment = pmts.pop(0)            
             current_balance *= (1 + self.interest)
             current_balance -= current_payment
-            yield LoanBalance(current_period = self.term - len(pmts),
-             current_balance = current_balance,
-             last_payment = current_payment)        
+            yield LoanBalance(
+                current_period = self.term - len(pmts),
+                current_balance = current_balance,
+                last_payment = current_payment)        
 
     @property
     def level_pmt(self):
