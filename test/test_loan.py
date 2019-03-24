@@ -33,7 +33,7 @@ class TestLoanAmortization(unittest.TestCase):
         self.assertAlmostEqual(round(amort.level_pmt, 5), round(10000 / 16.54685171, 5))
 
     def test_level_pmt_multi_nonzero_int_due(self):
-        amort = LoanAmortization(17, 0.012, 7431, first_pmt_now=True)
+        amort = LoanAmortization(17, 0.012, 7431, pmt_beg_term=True)
         self.assertAlmostEqual(round(amort.level_pmt, 5), round(7431 / 15.47911475, 5))
 
     def test_amort_balance_long_term(self):
@@ -65,7 +65,7 @@ class TestLoanAmortization(unittest.TestCase):
         3873.062417,3421.812692,2961.537974,2492.057761,
         2013.187943,1524.74073,1026.524572,518.3440907,0.0]
         rnd_exp_val = tuple(map(lambda x: round(x, 2), expected_values))
-        amort = LoanAmortization(24, 0.02, 10000, first_pmt_now=True)
+        amort = LoanAmortization(24, 0.02, 10000, pmt_beg_term=True)
         rnd_act_val = tuple(map(lambda x: round(x.current_balance, 2), amort.amortize()))
         self.assertEqual(rnd_exp_val, rnd_act_val)
 

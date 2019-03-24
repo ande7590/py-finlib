@@ -11,15 +11,15 @@ class LoanAmortization(object):
      + term - length of loan term
      + interest - interest applied in each period of term
      + loan_amt - total loan balance at start
-     + first_pmt_now - Annuity immediate (False) or annuity due (True)
+     + pmt_beg_term - Annuity immediate (False) or annuity due (True)
      """
 
-    def __init__(self, term: int, interest: float, loan_amt: float, first_pmt_now:bool=False):
+    def __init__(self, term: int, interest: float, loan_amt: float, pmt_beg_term:bool=False):
         self.__mutable = True
         self.term = term 
         self.interest = interest
         self.loan_amt = loan_amt
-        self.first_pmt_now = first_pmt_now
+        self.pmt_beg_term = pmt_beg_term
         self.__mutable = False
 
     def __setattr__(self, name, value):
@@ -44,7 +44,7 @@ class LoanAmortization(object):
         elif current_balance is float and current_balance > 0.0 and pmts is None:
             i = self.interest
             v = pow(1+i, -1)
-            int_fctr = i/(1+i) if self.first_pmt_now else i
+            int_fctr = i/(1+i) if self.pmt_beg_term else i
             num_pmts = log(int_fctr * (current_balance/self.level_pmt) - 1) / log(v)
             pmts = [self.level_pmt] * ceil(num_pmts)
         # if the payments are specified, use the current_balance if supplied, otherwise
@@ -61,7 +61,7 @@ class LoanAmortization(object):
 
         # run the amortization
         for current_pmt in pmts:                      
-            if self.first_pmt_now:
+            if self.pmt_beg_term:
                 # annuity due
                 current_balance -= current_pmt
                 current_balance *= (1 + self.interest)
@@ -88,6 +88,6 @@ class LoanAmortization(object):
             annuity_factor = self.term
         else:
             annuity_factor = (1 - disc_factor) / self.interest
-            if self.first_pmt_now == True:
+            if self.pmt_beg_term == True:
                 annuity_factor *= (1 + self.interest)
         return self.loan_amt / annuity_factor
