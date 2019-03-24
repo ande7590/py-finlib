@@ -58,10 +58,51 @@ class TestLoanAmortization(unittest.TestCase):
         self.assertEqual(rnd_exp_val, rnd_act_val)
     
     def test_amort_balance_short_term_due(self):
-        self.assertTrue(False)
+        expected_values = [9671.289027,9336.003835,8994.01294,
+        8645.182226,8289.374898,7926.451423,7556.269479,
+        7178.683896,6793.546602,6400.706561,6000.00972,
+        5591.298942,5174.413948,4749.191255,4315.464107,
+        3873.062417,3421.812692,2961.537974,2492.057761,
+        2013.187943,1524.74073,1026.524572,518.3440907,0.0]
+        rnd_exp_val = tuple(map(lambda x: round(x, 2), expected_values))
+        amort = LoanAmortization(24, 0.02, 10000, first_pmt_now=True)
+        rnd_act_val = tuple(map(lambda x: round(x.current_balance, 2), amort.amortize()))
+        self.assertEqual(rnd_exp_val, rnd_act_val)
 
     def test_amort_balance_pmts(self):
-        self.assertTrue(False)
+        # setup payment to feed into amortization
+        pmts = [528.7109725,0,528.7109725,0,
+        528.7109725,0,0,0,1321.777431,
+        528.7109725,1586.132918,528.7109725,
+        2643.554863,3741.898681,528.7109725]
+        # create a rounded payments for the "expected" amounts
+        expected_pmts = tuple(map(
+            lambda x: round(x, 2), pmts))
+        # create a rounded balance for the "expected" amounts
+        expected_bals = [9671.289027,
+        9864.714808,9533.298132,9723.964094,
+        9389.732404,9577.527052,9769.077593,
+        9964.459145,8841.970896,8490.099342,
+        7073.768411,6686.532806,4176.7086,
+        518.3440907,0]
+        expected_bals = tuple(map(
+            lambda x: round(x, 2), expected_bals))
+        # initialize object w/ paramters
+        amort = LoanAmortization(24, 0.02, 10000)
+        # run 
+        amort_schedule = tuple(amort.amortize(pmts=pmts))
+        actual_bals = tuple(map(
+            lambda x: round(x.current_balance, 2),
+            amort_schedule))
+        actual_pmts = tuple(map(
+            lambda x: round(x.last_payment, 2),
+            amort_schedule))
+        
+        # verify that actuals are equal to expected
+        self.assertCountEqual(expected_pmts, actual_pmts)
+        self.assertTupleEqual(expected_pmts, actual_pmts)
+        self.assertCountEqual(expected_bals, actual_bals)
+        self.assertTupleEqual(expected_bals, actual_bals)
 
     def test_amort_nonzero_balance(self):
         self.assertTrue(True)
