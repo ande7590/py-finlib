@@ -7,8 +7,7 @@ class LoanBalance(NamedTuple):
 
 class LoanAmortization(object):    
     """Amortizes a loan.  Specify loan parameters in constructor. Generate
-     the amortization schedule via the amortize() method.
-    """
+     the amortization schedule via the amortize() method. """
 
     def __init__(self, term: int, interest: float, loan_amt: float, first_pmt_now:bool=False):
         self.__mutable = True
@@ -32,8 +31,8 @@ class LoanAmortization(object):
          + pmts (float or Iterable) - schedule of payments to apply to loan.  Defaults to level
             payments implied by constructor arguments.
          + current_period (int) - if supplied, applies used to compute the number of remaining level_payments,
-            IF pmts are not supplied.  Also provides starting time index to LoanBalance items returned.
-        """
+            IF pmts are not supplied.  Also provides starting time index to LoanBalance items returned. """
+
         # No params, apply default amortization
         if current_balance is None and pmts is None:
             current_balance = self.loan_amt
@@ -46,29 +45,35 @@ class LoanAmortization(object):
             int_fctr = i/(1+i) if self.first_pmt_now else i
             num_pmts = log(int_fctr * (current_balance/self.level_pmt) - 1) / log(v)
             pmts = [self.level_pmt] * ceil(num_pmts)
+        # if the payments are specified, use the current_balance if supplied, otherwise
+        # use the initial loan balance
         elif isinstance(pmts, Iterable):
             current_balance = self.loan_amt if current_balance is None else current_balance
         # Check if the pmts is appropriate type
         elif not isinstance(pmts, Iterable):
             raise TypeError("pmts must be None, float, or Iterable, got %s" % type(pmts))
 
-        # Check if balance is appopriate value
+        # Check if balance is appropriate value
         if current_balance <= 0.0:
             raise TypeError("current_balance must be STRICTLY positive (non-zero) float")
 
         # run the amortization
         for current_pmt in pmts:                      
             if self.first_pmt_now:
+                # annuity due
                 current_balance -= current_pmt
                 current_balance *= (1 + self.interest)
-            else:    
+            else:
+                # annuity immediate
                 current_balance *= (1 + self.interest)
                 current_balance -= current_pmt
+            
             # do not allow negative loan balances
             floored_balance = max(current_balance, 0.0)
-            # if there is an "overpayment" resulting in negative loan balance, 
-            # lower the payment
+            
+            # lower the payment if there is an "overpayment" (negative loan balance) 
             last_payment = current_pmt - (floored_balance - current_balance)
+            
             yield LoanBalance(
                 current_balance = floored_balance,
                 last_payment = last_payment)
