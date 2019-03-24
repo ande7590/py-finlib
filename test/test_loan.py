@@ -32,14 +32,14 @@ class TestLoanAmortization(unittest.TestCase):
         amort = LoanAmortization(36, 0.05, 10000)
         self.assertAlmostEqual(round(amort.level_pmt, 5), round(10000 / 16.54685171, 5))
 
-    def test_level_pmt_multi_nonzero_int_immediate(self):
+    def test_level_pmt_multi_nonzero_int_due(self):
         amort = LoanAmortization(17, 0.012, 7431, first_pmt_now=True)
         self.assertAlmostEqual(round(amort.level_pmt, 5), round(7431 / 15.47911475, 5))
 
     def test_amort_balance_long_term(self):
         n_term = 250
         amort = LoanAmortization(n_term, 0.005, 10000)
-        schedule = [x.current_balance for x in amort.amortization()]
+        schedule = [x.current_balance for x in amort.amortize()]
         self.assertEqual(len(schedule), n_term)
         for x in schedule[0:(n_term - 1)]:
             self.assertGreater(x, 0)
@@ -54,8 +54,17 @@ class TestLoanAmortization(unittest.TestCase):
         878.7610284, 0]        
         rnd_exp_val = tuple(map(lambda x: round(x, 2), expected_values))
         amort = LoanAmortization(16, 0.05, 10000)
-        rnd_act_val = tuple(map(lambda x: round(x.current_balance, 2), amort.amortization()))
+        rnd_act_val = tuple(map(lambda x: round(x.current_balance, 2), amort.amortize()))
         self.assertEqual(rnd_exp_val, rnd_act_val)
+    
+    def test_amort_balance_short_term_due(self):
+        self.assertTrue(False)
+
+    def test_amort_balance_pmts(self):
+        self.assertTrue(False)
+
+    def test_amort_nonzero_balance(self):
+        self.assertTrue(True)
 
 
 if __name__ == '__main__':

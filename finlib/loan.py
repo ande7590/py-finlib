@@ -1,4 +1,4 @@
-from typing import NamedTuple, Union, Generator
+from typing import NamedTuple, Union, Generator, Iterable
 
 class LoanBalance(NamedTuple):
     current_period: int
@@ -9,6 +9,12 @@ class LoanAmortization(object):
     """Computes the balance and repayment schedule of loans and similar debts."""
 
     def __init__(self, term: int, interest: float, loan_amt: float, first_pmt_now:bool=False):
+        """Constructors a LoanAmortization object. 
+         + term (int) - the number of periods for the loan
+         + interest (float) - the interest rate applied in each period of the term
+         + loan_amt (float) - the initial balance of the loan
+         + first_pmt_now (bool) - payment at beginning (True) or end (False) of period
+        """
         self.__mutable = True
         self.term = term 
         self.interest = interest
@@ -21,34 +27,38 @@ class LoanAmortization(object):
             super.__setattr__(self, name, value)
         else:
             raise AttributeError("LoanAmortization is immutable, cannot set %s" % (name))            
-
-    def amortization(self) -> Generator[LoanBalance, None, None]:
-        """Performs a projection using the payment implied by the parameters 
-        in the constructor, which results in zero ending balance (loan fully repaid)"""
-        return self.amortization_from_pmts(self.level_pmt)
-
-    def amortization_from_pmts(self, pmts: Union[float, list]) \
-            -> Generator[LoanBalance, None, None]:
-        """Performs a projection using a schedule of arbitrary payments."""        
-        return self.amortization_from_balance(self.loan_amt, 0, pmts)
                 
-    def amortization_from_balance(self, current_balance: float, 
-        current_period: int=0, pmts: Union[float, list]=None) \
+    def amortize(self, current_balance: float=None, 
+        current_period: int=0, pmts: Union[float, Iterable]=None) \
             -> Generator[LoanBalance, None, None]:
-        """Performs a projection starting from the supplied balance and utilizing the pmts"""        
-        
+        """Performs an amortization projection.  
+         + current_balance (float) - Remaining balance of loan. Defaults to initial_balance
+            supplied in constructor.
+         + pmts (float or Iterable) - schedule of payments to apply to loan.  Defaults to level
+            payments implied by constructor arguments.
+         + current_period (int) - if supplied, applies used to compute the number of remaining level_payments,
+            IF pmts are not supplied.  Also provides starting time index to LoanBalance items returned.
+        """ 
         remaining_loan_periods = self.term - current_period
-        if pmts is not list:
+        if pmts is not Iterable:
             pmts = [pmts if pmts is float else self.level_pmt] * remaining_loan_periods
 
-        while len(pmts) > 0:
-            current_payment = pmts.pop(0)            
-            current_balance *= (1 + self.interest)
-            current_balance -= current_payment
+        if current_balance is None:
+            current_balance = self.loan_amt
+
+        for current_pmt in pmts:                      
+            if self.first_pmt_now:
+                current_balance -= current_pmt
+                current_balance *= (1 + self.interest)
+            else:    
+                current_balance *= (1 + self.interest)
+                current_balance -= current_pmt
+
+            current_period += 1
             yield LoanBalance(
-                current_period = self.term - len(pmts),
+                current_period = current_period,
                 current_balance = current_balance,
-                last_payment = current_payment)        
+                last_payment = current_pmt)        
 
     @property
     def level_pmt(self):
