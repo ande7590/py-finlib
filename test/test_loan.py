@@ -97,6 +97,7 @@ class TestLoanAmortization(unittest.TestCase):
         actual_pmts = tuple(map(
             lambda x: round(x.last_payment, 2),
             amort_schedule))
+
         
         # verify that actuals are equal to expected
         self.assertCountEqual(expected_pmts, actual_pmts)

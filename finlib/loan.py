@@ -7,7 +7,12 @@ class LoanBalance(NamedTuple):
 
 class LoanAmortization(object):    
     """Amortizes a loan.  Specify loan parameters in constructor. Generate
-     the amortization schedule via the amortize() method. """
+     the amortization schedule via the amortize() method.
+     + term - length of loan term
+     + interest - interest applied in each period of term
+     + loan_amt - total loan balance at start
+     + first_pmt_now - Annuity immediate (False) or annuity due (True)
+     """
 
     def __init__(self, term: int, interest: float, loan_amt: float, first_pmt_now:bool=False):
         self.__mutable = True
@@ -25,13 +30,10 @@ class LoanAmortization(object):
                 
     def amortize(self, current_balance: float=None, pmts: Iterable=None)\
             -> Generator[LoanBalance, None, None]:
-        """Performs an amortization projection, reflecting paramters specified in CONSTRUCTOR.
-         + current_balance (float) - Remaining balance of loan. Defaults to initial_balance
-            supplied in constructor.
-         + pmts (float or Iterable) - schedule of payments to apply to loan.  Defaults to level
-            payments implied by constructor arguments.
-         + current_period (int) - if supplied, applies used to compute the number of remaining level_payments,
-            IF pmts are not supplied.  Also provides starting time index to LoanBalance items returned. """
+        """Performs an amortization projection:
+        + pmts - Schedule of payments to apply to loan.  Defaults to level payments implied by constructor arguments.
+        + current_balance - Remaining loan balance.  Defaults to loan_amt (constructor arg).
+        """
 
         # No params, apply default amortization
         if current_balance is None and pmts is None:
